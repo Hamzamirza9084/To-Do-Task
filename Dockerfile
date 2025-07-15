@@ -23,16 +23,22 @@ RUN apt-get update -y && \
         gd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Copy project files
 COPY . /var/www
 
+# Set permissions
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage
 
+# Expose Laravel port
 EXPOSE 8080
 
-CMD bash -c "composer install --no-dev --optimize-autoloader && \
+# Install faker & dependencies, run migrations and start Laravel server
+CMD bash -c "composer require fakerphp/faker && \
+    composer install --optimize-autoloader && \
     php artisan config:clear && \
-    php artisan migrate:fresh  --force && \
+    php artisan migrate:fresh --force && \
     php artisan serve --host=0.0.0.0 --port=8080"
