@@ -1,28 +1,20 @@
-# Base PHP image with FPM
 FROM php:8.2-fpm
 
-# Set working directory
 WORKDIR /var/www
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git curl libpng-dev libonig-dev libxml2-dev zip unzip \
     && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 
-# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy app files
 COPY . /var/www
 
-# Set permissions
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage
 
-# Expose Laravel server port
 EXPOSE 8080
 
-# Start Laravel server and run migrate:fresh --seed
 CMD bash -c "composer install --no-dev --optimize-autoloader && \
     php artisan config:clear && \
     php artisan migrate:fresh --seed --force && \
