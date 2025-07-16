@@ -2,43 +2,22 @@ FROM php:8.2-fpm
 
 WORKDIR /var/www
 
-# Install system dependencies
-RUN apt-get update -y && \
-    apt-get install -y \
-        git \
-        curl \
-        libpng-dev \
-        libonig-dev \
-        libxml2-dev \
-        zip \
-        unzip \
-        libpq-dev \
-    && docker-php-ext-install \
-        pdo \
-        pdo_pgsql \
-        mbstring \
-        exif \
-        pcntl \
-        bcmath \
-        gd \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    zip unzip curl git libxml2-dev libzip-dev libpng-dev libjpeg-dev libonig-dev \
+    sqlite3 libsqlite3-dev
 
-# Install Composer
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
+
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy project files
 COPY . /var/www
+COPY --chown=www-data:www-data . /var/www
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 755 /var/www/storage
+RUN chmod -R 755 /var/www
+RUN composer install
 
-# Expose Laravel port
-EXPOSE 8080
+COPY .env.example .env
+RUN php artisan key:generate
 
-# Install faker & dependencies, run migrations and start Laravel server
-CMD bash -c "composer require fakerphp/faker && \
-    composer install --optimize-autoloader && \
-    php artisan config:clear && \
-    php artisan migrate:fresh --force && \
-    php artisan serve --host=0.0.0.0 --port=8080"
+EXPOSE 8000
+CMD php artisan serve --host=0.0.0.0 --port=8000
