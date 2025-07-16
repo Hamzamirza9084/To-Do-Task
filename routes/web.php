@@ -93,6 +93,18 @@ Route::put('/tasks/{task}/toggle',function(Task $task){
 
 })->name('tasks.toggle');
 
+Route::get('/migrate', function () {
+    Artisan::call('migrate');
+    return 'Migration complete';
+});
+
+use Illuminate\Support\Facades\Schema;
+
+Route::get('/check-tasks', function () {
+    return Schema::hasTable('tasks') ? 'Table exists' : 'No tasks table';
+});
+
+
 // Route::get('/hello',function(){
 //     return 'bot';
 // });
